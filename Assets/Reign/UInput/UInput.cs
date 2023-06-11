@@ -8,7 +8,8 @@ using UnityEngine.InputSystem;
 
 namespace Reign
 {
-    public static class UInput
+    [DefaultExecutionOrder(-32000)]
+    public class UInput : MonoBehaviour
     {
         #if ENABLE_INPUT_SYSTEM
         private static Mouse mouse;
@@ -16,6 +17,13 @@ namespace Reign
 
         static UInput()
         {
+            mouse = Mouse.current;
+            keyboard = Keyboard.current;
+        }
+
+        private void Update()
+        {
+            // keep grabbing them in case device changes occur
             mouse = Mouse.current;
             keyboard = Keyboard.current;
         }
