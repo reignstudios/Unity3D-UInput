@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Haptics;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.UI;
 
@@ -32,8 +33,15 @@ namespace Reign
 					{
 						if (button.wasPressedThisFrame)
 						{
-							if (button.path.Contains("Stick") || button.path.Contains("Trigger")) continue;
-							Debug.Log($"'{button.name}'");
+							string path = button.path;
+							if (path.Contains("Stick/") || path.Contains("Trigger/")) continue;
+							Debug.Log($"'{button.name}' '{path}'");
+
+							if (device is IDualMotorRumble rumble) rumble.SetMotorSpeeds(1, 1);
+						}
+						else if (button.wasReleasedThisFrame)
+						{
+							if (device is IDualMotorRumble rumble) rumble.SetMotorSpeeds(0, 0);
 						}
 					}
 				}
