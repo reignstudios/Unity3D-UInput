@@ -1,9 +1,11 @@
 //#undef ENABLE_INPUT_SYSTEM
 
+using System.Collections.Generic;
 using UnityEngine;
 
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
+
 #endif
 
 namespace Reign
@@ -15,10 +17,38 @@ namespace Reign
         private static Mouse mouse;
         private static Keyboard keyboard;
 
-        static UInput()
+        private static bool devicesChanged;
+        public static List<UGamepad> gamepads { get; private set; }
+
+        private void RefreshDevices()
         {
-            mouse = Mouse.current;
-            keyboard = Keyboard.current;
+            Debug.Log("UInput: RefreshDevices");
+            var devices = InputSystem.devices;
+            gamepads = new List<UGamepad>();
+            for (int i = 0; i != devices.Count; ++i)
+            {
+                var device = devices[i];
+                if (!(device is Gamepad)) continue;
+
+                Debug.Log($"UInput: Gampad '{device.name}' Type:'{device.GetType()}'");
+                gamepads.Add(new UGamepad(device));
+            }
+        }
+
+		private void Start()
+		{
+            RefreshDevices();
+			InputSystem.onDeviceChange += InputSystem_onDeviceChange;
+		}
+
+        private void OnDestroy()
+        {
+            InputSystem.onDeviceChange -= InputSystem_onDeviceChange;
+        }
+
+        private void InputSystem_onDeviceChange(InputDevice device, InputDeviceChange change)
+        {
+            devicesChanged = true;
         }
 
         private void Update()
@@ -26,6 +56,19 @@ namespace Reign
             // keep grabbing them in case device changes occur
             mouse = Mouse.current;
             keyboard = Keyboard.current;
+
+            // refresh devices
+            if (devicesChanged)
+            {
+                devicesChanged = false;
+                RefreshDevices();
+            }
+
+            // collect input from all devices
+            foreach (var gamepad in gamepads)
+            {
+                gamepad.Update();
+            }
         }
         #else
         private static Vector3 lastMousePos;
