@@ -12,13 +12,18 @@ public class TestUInput : MonoBehaviour
 	{
 		keyCodes = (KeyCode[])System.Enum.GetValues(typeof(KeyCode));
 		lable = string.Empty;
+
+		#if ENABLE_INPUT_SYSTEM
 		UInput.DevicesChangedCallback += UInput_DevicesChangedCallback;
+		#endif
 	}
 
+	#if ENABLE_INPUT_SYSTEM
 	private void OnDestroy()
 	{
 		UInput.DevicesChangedCallback -= UInput_DevicesChangedCallback;
 	}
+	#endif
 
 	private void UInput_DevicesChangedCallback()
 	{
