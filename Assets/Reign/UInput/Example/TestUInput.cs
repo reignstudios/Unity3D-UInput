@@ -6,23 +6,30 @@ using Reign;
 public class TestUInput : MonoBehaviour
 {
 	private KeyCode[] keyCodes;
+	private string lastValue;
 
 	private void Start()
 	{
 		keyCodes = (KeyCode[])System.Enum.GetValues(typeof(KeyCode));
+		lastValue = string.Empty;
 	}
 
 	private void Update()
 	{
 		// mouse
-		if (UInput.GetMouseButtonDown(0)) Debug.Log("Mouse Left Click");
-		if (UInput.GetMouseButtonDown(1)) Debug.Log("Mouse Right Click");
-		if (UInput.GetMouseButtonDown(2)) Debug.Log("Mouse Middle Click");
+		if (UInput.GetMouseButtonDown(0)) lastValue = "Mouse Left Click";
+		if (UInput.GetMouseButtonDown(1)) lastValue = "Mouse Right Click";
+		if (UInput.GetMouseButtonDown(2)) lastValue = "Mouse Middle Click";
 
 		// keyboard
 		foreach (var keyCode in keyCodes)
 		{
-			if (UInput.GetKeyDown(keyCode)) Debug.Log("Key: " + keyCode.ToString());
+			if (UInput.GetKeyDown(keyCode)) lastValue = "Key: " + keyCode.ToString();
 		}
+	}
+
+	private void OnGUI()
+	{
+		GUI.TextArea(new Rect(0, 0, 128, 32), lastValue);
 	}
 }

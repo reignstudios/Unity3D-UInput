@@ -11,10 +11,16 @@ namespace Reign
     public class UController : MonoBehaviour
     {
 		private static ReadOnlyArray<InputDevice> devices;
+		private string lastValue;
 
 		static UController()
 		{
 			//devices = InputSystem.devices;
+		}
+
+		private void Start()
+		{
+			lastValue = string.Empty;
 		}
 
 		private void Update()
@@ -31,11 +37,12 @@ namespace Reign
 					//Debug.Log($"Control: '{control.name}' '{control.GetType()}'");
 					if (control is ButtonControl button)
 					{
+						if (button.name == "anyKey") continue;
 						if (button.wasPressedThisFrame)
 						{
 							string path = button.path;
 							if (path.Contains("Stick/") || path.Contains("Trigger/")) continue;
-							Debug.Log($"'{button.name}' '{path}'");
+							lastValue = $"'{button.name}' '{path}'";
 
 							if (device is IDualMotorRumble rumble) rumble.SetMotorSpeeds(1, 1);
 						}
@@ -44,8 +51,22 @@ namespace Reign
 							if (device is IDualMotorRumble rumble) rumble.SetMotorSpeeds(0, 0);
 						}
 					}
+					else if (control is StickControl stick)
+					{
+						var value = stick.value;
+						if (value.magnitude != 0) lastValue = value.ToString();
+					}
+					/*else if (control is AxisControl axis)
+					{
+						lastValue = axis.value.ToString();
+					}*/
 				}
 			}
+		}
+
+		private void OnGUI()
+		{
+			GUI.TextArea(new Rect(0, 64, 512, 32), lastValue);
 		}
 	}
 }
