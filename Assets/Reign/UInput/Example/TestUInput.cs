@@ -12,6 +12,17 @@ public class TestUInput : MonoBehaviour
 	{
 		keyCodes = (KeyCode[])System.Enum.GetValues(typeof(KeyCode));
 		lable = string.Empty;
+		UInput.DevicesChangedCallback += UInput_DevicesChangedCallback;
+	}
+
+	private void OnDestroy()
+	{
+		UInput.DevicesChangedCallback -= UInput_DevicesChangedCallback;
+	}
+
+	private void UInput_DevicesChangedCallback()
+	{
+		lable = "Devices Changed";
 	}
 
 	private void Update()

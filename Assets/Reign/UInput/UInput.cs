@@ -20,9 +20,12 @@ namespace Reign
         private static bool devicesChanged;
         public static List<UGamepad> gamepads { get; private set; }
 
+        public delegate void DevicesChangedCallbackMethod();
+        public static event DevicesChangedCallbackMethod DevicesChangedCallback;
+
         private void RefreshDevices()
         {
-            Debug.Log("UInput: RefreshDevices");
+            //Debug.Log("UInput: RefreshDevices");
             var devices = InputSystem.devices;
             gamepads = new List<UGamepad>();
             for (int i = 0; i != devices.Count; ++i)
@@ -30,9 +33,11 @@ namespace Reign
                 var device = devices[i];
                 if (!(device is Gamepad)) continue;
 
-                Debug.Log($"UInput: Gampad '{device.name}' Type:'{device.GetType()}'");
+                //Debug.Log($"UInput: Gampad '{device.name}' Type:'{device.GetType()}'");
                 gamepads.Add(new UGamepad(device));
             }
+
+            DevicesChangedCallback?.Invoke();
         }
 
 		private void Start()
