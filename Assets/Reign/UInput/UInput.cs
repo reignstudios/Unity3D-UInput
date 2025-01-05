@@ -1,11 +1,16 @@
 //#undef ENABLE_INPUT_SYSTEM
 
+#if UINPUT_DISABLE_NEW
+#undef ENABLE_INPUT_SYSTEM
+#endif
+
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
+using System.IO;
 
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
-
 #endif
 
 namespace Reign
@@ -13,19 +18,19 @@ namespace Reign
     [DefaultExecutionOrder(-32000)]
     public class UInput : MonoBehaviour
     {
-        #if ENABLE_INPUT_SYSTEM
-        private static Mouse mouse;
-        private static Keyboard keyboard;
-
-        private static bool devicesChanged;
         public static List<UGamepad> gamepads { get; private set; }
 
         public delegate void DevicesChangedCallbackMethod();
         public static event DevicesChangedCallbackMethod DevicesChangedCallback;
+        
+        #if ENABLE_INPUT_SYSTEM
+        public static Mouse mouse { get; private set; }
+        public static Keyboard keyboard { get; private set; }
+        private static bool devicesChanged;
 
         private void RefreshDevices()
         {
-            //Debug.Log("UInput: RefreshDevices");
+            Debug.Log("UInput: RefreshDevices");
             var devices = InputSystem.devices;
             gamepads = new List<UGamepad>();
             for (int i = 0; i != devices.Count; ++i)
@@ -33,7 +38,8 @@ namespace Reign
                 var device = devices[i];
                 if (!(device is Gamepad)) continue;
 
-                //Debug.Log($"UInput: Gampad '{device.name}' Type:'{device.GetType()}'");
+                var desc = device.description;
+                Debug.Log($"UInput: Gampad '{device.name}' Name '{device.displayName}' ShortName '{device.shortDisplayName}' Type:'{device.GetType()}' Interface:{desc.interfaceName}");
                 gamepads.Add(new UGamepad(device));
             }
 
@@ -78,10 +84,139 @@ namespace Reign
         #else
         private static Vector3 lastMousePos;
 
-        static UInput()
+        private void RefreshDevices()
+        {
+            gamepads = new List<UGamepad>();
+            int i = 0;
+            foreach (string gamepadName in Input.GetJoystickNames())
+            {
+                Debug.Log("Gamepad: " + gamepadName);
+                gamepads.Add(new UGamepad(i, gamepadName));
+                i++;
+            }
+        }
+
+        private void Awake()
         {
             lastMousePos = Input.mousePosition;
+            RefreshDevices();
         }
+
+        private void Update()
+        {
+            foreach (var gamepad in gamepads)
+            {
+                gamepad.Update();
+            }
+        }
+
+        #if UNITY_EDITOR
+        [MenuItem("UInput/Generate Input Mappings (1 Gamepads)")]
+        private static void InputConfig_GenerateMappings_1()
+        {
+            InputConfig_GenerateMappings(1);
+        }
+
+        [MenuItem("UInput/Generate Input Mappings (2 Gamepads)")]
+        private static void InputConfig_GenerateMappings_2()
+        {
+            InputConfig_GenerateMappings(2);
+        }
+
+        [MenuItem("UInput/Generate Input Mappings (4 Gamepads)")]
+        private static void InputConfig_GenerateMappings_4()
+        {
+            InputConfig_GenerateMappings(4);
+        }
+
+        [MenuItem("UInput/Generate Input Mappings (6 Gamepads)")]
+        private static void InputConfig_GenerateMappings_6()
+        {
+            InputConfig_GenerateMappings(6);
+        }
+
+        [MenuItem("UInput/Generate Input Mappings (8 Gamepads)")]
+        private static void InputConfig_GenerateMappings_8()
+        {
+            InputConfig_GenerateMappings(8);
+        }
+
+        private static void InputConfig_GenerateMappings(int maxGamepads)
+        {
+            if (!EditorUtility.DisplayDialog("Warning!", "This will override InputManager.asset\nMake sure you backup first!", "OK", "Cancel")) return;
+
+            string settingsPath = Path.Combine(Path.GetDirectoryName(Application.dataPath), "ProjectSettings");
+            string inputSettingsPath = Path.Combine(settingsPath, "InputManager.asset");
+            using (var writer = new StreamWriter(inputSettingsPath))
+            {
+                // header
+                writer.WriteLine
+(
+@"%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!13 &1
+InputManager:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Axes:"
+);
+
+                // gamepads
+                for (int g = 0; g != maxGamepads; ++g)
+                {
+                    // buttons
+                    for (int i = 0; i != 28; ++i)
+                    {
+                        writer.WriteLine
+(
+@$"  - serializedVersion: 3
+    m_Name: button_{g}_{i}
+    descriptiveName: 
+    descriptiveNegativeName: 
+    negativeButton: 
+    positiveButton: joystick button {i}
+    altNegativeButton: 
+    altPositiveButton: 
+    gravity: 1000
+    dead: 0
+    sensitivity: 1
+    snap: 0
+    invert: 0
+    type: 0
+    axis: 0
+    joyNum: {g + 1}"
+);
+                    }
+
+                    // axes
+                    for (int i = 0; i != 28; ++i)
+                    {
+                        writer.WriteLine
+(
+@$"  - serializedVersion: 3
+    m_Name: axis_{g}_{i}
+    descriptiveName: 
+    descriptiveNegativeName: 
+    negativeButton: 
+    positiveButton: 
+    altNegativeButton: 
+    altPositiveButton: 
+    gravity: 0
+    dead: 0
+    sensitivity: 1
+    snap: 0
+    invert: 0
+    type: 2
+    axis: {i}
+    joyNum: {g + 1}"
+);
+                    }
+                }
+            }
+            Debug.Log("Input mappings saved to: " + inputSettingsPath);
+            AssetDatabase.Refresh();
+        }
+        #endif
         #endif
 
         #region Mouse
@@ -93,7 +228,7 @@ namespace Reign
                 if (mouse == null) return default;
                 return mouse.position.ReadValue();
                 #else
-                 return Input.mousePosition;
+                return Input.mousePosition;
                 #endif
             }
         }

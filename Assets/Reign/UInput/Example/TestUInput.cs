@@ -12,18 +12,13 @@ public class TestUInput : MonoBehaviour
 	{
 		keyCodes = (KeyCode[])System.Enum.GetValues(typeof(KeyCode));
 		lable = string.Empty;
-
-		#if ENABLE_INPUT_SYSTEM
 		UInput.DevicesChangedCallback += UInput_DevicesChangedCallback;
-		#endif
 	}
 
-	#if ENABLE_INPUT_SYSTEM
 	private void OnDestroy()
 	{
 		UInput.DevicesChangedCallback -= UInput_DevicesChangedCallback;
 	}
-	#endif
 
 	private void UInput_DevicesChangedCallback()
 	{
@@ -44,13 +39,12 @@ public class TestUInput : MonoBehaviour
 		}
 
 		// controller
-		#if ENABLE_INPUT_SYSTEM
 		foreach (var gamepad in UInput.gamepads)
 		{
-			if (gamepad.button0.down) lable = "Gamepad: Button0";
-			if (gamepad.button1.down) lable = "Gamepad: Button1";
-			if (gamepad.button2.down) lable = "Gamepad: Button2";
-			if (gamepad.button3.down) lable = "Gamepad: Button3";
+			if (gamepad.primary1.down) lable = "Gamepad: Button0";
+			if (gamepad.primary2.down) lable = "Gamepad: Button1";
+			if (gamepad.primary3.down) lable = "Gamepad: Button2";
+			if (gamepad.primary4.down) lable = "Gamepad: Button3";
 
 			if (gamepad.dpadUp.down) lable = "Gamepad: DPadUp";
 			if (gamepad.dpadDown.down) lable = "Gamepad: DPadDown";
@@ -73,7 +67,6 @@ public class TestUInput : MonoBehaviour
 			if (gamepad.joystickLeft.value.magnitude != 0) lable = "Gamepad: TriggerLeft: " + gamepad.joystickLeft.value.ToString();
 			if (gamepad.joystickRight.value.magnitude != 0) lable = "Gamepad: TriggerRight: " + gamepad.joystickRight.value.ToString();
 		}
-		#endif
 	}
 
 	private void OnGUI()
