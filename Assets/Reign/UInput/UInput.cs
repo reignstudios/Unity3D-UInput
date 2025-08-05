@@ -248,6 +248,19 @@ InputManager:
                 #endif
             }
         }
+        
+        public static Vector2 scroll
+        {
+            get
+            {
+                #if ENABLE_INPUT_SYSTEM
+                var s = mouse.scroll;
+                return new Vector2(s.x.ReadValue(), s.y.ReadValue());
+                #else
+                return Input.mouseScrollDelta;
+                #endif
+            }
+        }
 
         public static bool GetMouseButton(int button)
         {
