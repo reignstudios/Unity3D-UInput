@@ -18,6 +18,8 @@ namespace Reign
     [DefaultExecutionOrder(-32000)]
     public class UInput : MonoBehaviour
     {
+        internal static UInput instance;
+
         public static List<UGamepad> gamepads { get; private set; }
         public bool enableGamepads;
 
@@ -49,6 +51,13 @@ namespace Reign
 
 		private void Start()
 		{
+            if (instance)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            instance = this;
+
             Debug.Log("UInput: v1.0.0");
             if (enableGamepads)
             {
@@ -106,6 +115,14 @@ namespace Reign
 
         private void Awake()
         {
+            if (instance)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            instance = this;
+            DontDestroyOnLoad(gameObject);
+
             lastMousePos = Input.mousePosition;
             if (enableGamepads) RefreshDevices();
         }
