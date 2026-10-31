@@ -19,6 +19,7 @@ namespace Reign
     public class UInput : MonoBehaviour
     {
         public static List<UGamepad> gamepads { get; private set; }
+        public bool enableGamepads;
 
         public delegate void DevicesChangedCallbackMethod();
         public static event DevicesChangedCallbackMethod DevicesChangedCallback;
@@ -48,8 +49,12 @@ namespace Reign
 
 		private void Start()
 		{
-            RefreshDevices();
-			InputSystem.onDeviceChange += InputSystem_onDeviceChange;
+            Debug.Log("UInput: v1.0.0");
+            if (enableGamepads)
+            {
+                RefreshDevices();
+			    InputSystem.onDeviceChange += InputSystem_onDeviceChange;
+            }
 		}
 
         private void OnDestroy()
@@ -68,17 +73,20 @@ namespace Reign
             mouse = Mouse.current;
             keyboard = Keyboard.current;
 
-            // refresh devices
-            if (devicesChanged)
+            if (enableGamepads)
             {
-                devicesChanged = false;
-                RefreshDevices();
-            }
+                // refresh devices
+                if (devicesChanged)
+                {
+                    devicesChanged = false;
+                    RefreshDevices();
+                }
 
-            // collect input from all devices
-            foreach (var gamepad in gamepads)
-            {
-                gamepad.Update();
+                // collect input from all devices
+                foreach (var gamepad in gamepads)
+                {
+                    gamepad.Update();
+                }
             }
         }
         #else
@@ -99,14 +107,17 @@ namespace Reign
         private void Awake()
         {
             lastMousePos = Input.mousePosition;
-            RefreshDevices();
+            if (enableGamepads) RefreshDevices();
         }
 
         private void Update()
         {
-            foreach (var gamepad in gamepads)
+            if (enableGamepads)
             {
-                gamepad.Update();
+                foreach (var gamepad in gamepads)
+                {
+                    gamepad.Update();
+                }
             }
         }
 
