@@ -58,12 +58,18 @@ namespace Reign
             }
             instance = this;
 
-            Debug.Log("UInput: v1.0.0");
+            Debug.Log("UInput: v1.1.0");
             if (enableGamepads)
             {
                 RefreshDevices();
 			    InputSystem.onDeviceChange += InputSystem_onDeviceChange;
             }
+            else
+            {
+                gamepads = new List<UGamepad>();
+            }
+
+            _touches = new Vector2[10];
 		}
 
         private void OnDestroy()
@@ -81,7 +87,7 @@ namespace Reign
             // keep grabbing them in case device changes occur
             mouse = Mouse.current;
             keyboard = Keyboard.current;
-
+            
             if (enableGamepads)
             {
                 // refresh devices
@@ -494,5 +500,47 @@ InputManager:
 		}
         #endif
 		#endregion
+
+        #region Touch
+        public static int touchCount { get; private set; }
+
+        private static Vector2[] _touches;
+        public static Vector2[] touches
+        {
+            get
+            {
+                touchCount = 0;
+                #if ENABLE_INPUT_SYSTEM
+                if (Touchscreen.current != null)
+                {
+                    foreach (var t in Touchscreen.current.touches)
+                    {
+                        _touches[touchCount] = t.position.value;
+                        touchCount++;
+                    }
+                }
+                #else
+                for (int i = 0; i < Input.touchCount; ++i)
+                {
+                    _touches[touchCount] = Input.GetTouch(i).position;
+                    touchCount++;
+                }
+                #endif
+                return _touches;
+            }
+        }
+        public static Vector2 GetTouch(int index)
+        {
+            #if ENABLE_INPUT_SYSTEM
+            if (Touchscreen.current != null)
+            {
+                return Touchscreen.current.touches[index].position.value;
+            }
+            return Vector2.zero;
+            #else
+            return Input.GetTouch(index).position;
+            #endif
+        }
+        #endregion
 	}
 }
